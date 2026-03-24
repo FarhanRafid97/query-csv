@@ -30,16 +30,6 @@ export default function TableTanstack({
     <div className="w-full h-full flex flex-col min-h-0">
       {tableData.length > 0 ? (
         <div className="flex flex-col gap-2 ">
-          <div className="px-6 justify-end w-full flex">
-            <ExportCsv
-              data={tableData}
-              headers={headers.map((column) => ({
-                label: column,
-                key: column
-              }))}
-            />
-          </div>
-          <Separator />
           <VirtualizeTable data={tableData || []} columns={columns as ColumnDef<object>[]} />
         </div>
       ) : (

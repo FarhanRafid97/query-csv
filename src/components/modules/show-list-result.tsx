@@ -16,7 +16,7 @@ const ShowListResult: React.FC<ShowListResultProps> = ({
   return (
     <div className="w-full h-full flex flex-col">
       <Tabs defaultValue="data-0" className="w-full h-full flex flex-col">
-        <TabsList className="w-full flex shrink-0">
+        <TabsList className="w-full flex shrink-0  p-0 shadow-none">
           {currentShowingDataMultiple.map((_, index) => (
             <TabsTrigger key={index} value={`data-${index}`}>
               Result {index + 1}

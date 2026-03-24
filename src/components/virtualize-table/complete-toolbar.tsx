@@ -1,11 +1,13 @@
-import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from '@/components/ui/popover';
 import { MixerHorizontalIcon } from '@radix-ui/react-icons';
 import type { Table } from '@tanstack/react-table';
 import { Separator } from '../ui/separator';
 import { DataTableViewOptions } from './data-table-view-options';
+import { DataGridRowHeightMenu } from './select-column-height';
+import ExportCsv from '../modules/export-csv';
 
-const CompleteToolbar = ({ table }: { table: Table<object> }) => {
+const CompleteToolbar = ({ table, data }: { table: Table<object>; data: object[] }) => {
+  const headers = data.length > 0 ? Object.keys(data[0]) : [];
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -15,15 +17,30 @@ const CompleteToolbar = ({ table }: { table: Table<object> }) => {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-84 p-0">
         <PopoverHeader className="p-4">
-          <PopoverTitle className="text-[11px] font-medium text-primary flex items-center gap-2">
+          <PopoverTitle className="text-xs font-medium  flex items-center gap-2">
             {' '}
             <MixerHorizontalIcon className="size-3" /> Toolbar Options
           </PopoverTitle>
         </PopoverHeader>
-        <div className="p-4"></div>
+        <div className="p-4">
+          <div className="">
+            <ExportCsv data={data} headers={headers.map((header: string) => ({ label: header, key: header }))} />
+          </div>
+        </div>
         <Separator />
         <div className="p-4">
-          <DataTableViewOptions table={table} />
+          <div className="w-full flex items-center justify-between">
+            <p className="text-xs font-medium ">Row Height</p>
+            <DataGridRowHeightMenu />
+          </div>
+        </div>
+        <Separator />
+        <div className="p-4">
+          <div className="w-full flex flex-col gap-2">
+            <p className="text-xs font-medium mb-2">Displays preferences</p>
+
+            <DataTableViewOptions table={table} />
+          </div>
         </div>
       </PopoverContent>
     </Popover>

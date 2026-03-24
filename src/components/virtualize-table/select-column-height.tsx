@@ -1,10 +1,10 @@
 'use client';
 
-import type { Table } from '@tanstack/react-table';
 import { AlignVerticalSpaceAroundIcon, ChevronsDownUpIcon, EqualIcon, MinusIcon } from 'lucide-react';
-import * as React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useRowHeightStore } from '@/store/row-height';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 const rowHeights = [
   {
@@ -29,38 +29,38 @@ const rowHeights = [
   }
 ] as const;
 
-interface DataGridRowHeightMenuProps<TData> extends React.ComponentProps<typeof SelectContent> {
-  table: Table<TData>;
-}
-
-export function DataGridRowHeightMenu<TData>({ ...props }: DataGridRowHeightMenuProps<TData>) {
+export function DataGridRowHeightMenu() {
   const { rowHeight, setRowHeight } = useRowHeightStore();
-  const onRowHeightChange = (value: 'short' | 'medium' | 'tall' | 'extra-tall') => {
-    setRowHeight(value);
-  };
-  const selectedRowHeight = React.useMemo(() => {
-    return rowHeights.find((opt) => opt.value === rowHeight) ?? rowHeights[0];
-  }, [rowHeight]);
 
   return (
-    <Select value={rowHeight} onValueChange={onRowHeightChange}>
-      <SelectTrigger size="sm" className="[&_svg:nth-child(2)]:hidden">
-        <SelectValue placeholder="Row height">
-          <selectedRowHeight.icon />
-          {selectedRowHeight.label}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent {...props}>
-        {rowHeights.map((option) => {
-          const OptionIcon = option.icon;
-          return (
-            <SelectItem key={option.value} value={option.value}>
-              <OptionIcon className="size-4" />
-              {option.label}
-            </SelectItem>
-          );
-        })}
-      </SelectContent>
-    </Select>
+    <ToggleGroup
+      type="single"
+      value={rowHeight}
+      onValueChange={(value) => {
+        if (value) setRowHeight(value as 'short' | 'medium' | 'tall' | 'extra-tall');
+      }}
+      variant="outline"
+      size="sm"
+    >
+      {rowHeights.map((option) => {
+        const OptionIcon = option.icon;
+        return (
+          <Tooltip key={option.value} delayDuration={300}>
+            <TooltipTrigger asChild onFocus={(e) => e.preventDefault()}>
+              <ToggleGroupItem
+                value={option.value}
+                aria-label={option.label}
+                className={cn('focus:ring-0 focus:ring-offset-0', rowHeight === option.value ? 'bg-secondary' : '')}
+              >
+                <OptionIcon className="size-3" />
+              </ToggleGroupItem>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{option.label}</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      })}
+    </ToggleGroup>
   );
 }
