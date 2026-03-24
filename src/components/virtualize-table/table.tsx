@@ -11,8 +11,6 @@ import type {
 import {
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -27,10 +25,23 @@ import TableToolbar from './table-toolbar';
 import WrapperVirtualizeTable from './wrapper-virtualize-table';
 import { useRowHeightStore } from '@/store/row-height';
 import { getLineCount, getRowHeightValue } from '@/lib/helper';
-import { match } from 'ts-pattern';
+
+const LINE_CLAMP_CLASSES: Record<number, string> = {
+  1: 'truncate line-clamp-1',
+  2: 'line-clamp-2',
+  3: 'line-clamp-3',
+  4: 'line-clamp-4'
+};
 
 function getCommonPinningStyles<T>(column: Column<T>): CSSProperties {
   const isPinned = column.getIsPinned();
+  if (!isPinned) {
+    return {
+      position: 'relative',
+      width: column.getSize()
+    };
+  }
+
   const isLastLeftPinnedColumn = isPinned === 'left' && column.getIsLastColumn('left');
   const isFirstRightPinnedColumn = isPinned === 'right' && column.getIsFirstColumn('right');
 
@@ -40,14 +51,13 @@ function getCommonPinningStyles<T>(column: Column<T>): CSSProperties {
       : isFirstRightPinnedColumn
       ? '4px 0 4px -4px var(--border) inset'
       : undefined,
-
     left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
     right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-    opacity: isPinned ? 0.97 : 1,
-    position: isPinned ? 'sticky' : 'relative',
-    background: isPinned ? 'var(--background)' : 'var(--background)',
+    opacity: 0.97,
+    position: 'sticky',
+    background: 'var(--background)',
     width: column.getSize(),
-    zIndex: isPinned ? 1 : undefined
+    zIndex: 1
   };
 }
 
@@ -61,6 +71,7 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
   const { rowHeight } = useRowHeightStore();
   const heightCell = getRowHeightValue(rowHeight);
   const heightHeader = getRowHeightValue('short');
+  const lineClampClass = LINE_CLAMP_CLASSES[getLineCount(rowHeight)] ?? LINE_CLAMP_CLASSES[1];
 
   const table = useReactTable({
     data,
@@ -72,14 +83,9 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
       globalFilter: search,
       columnFilters
     },
-
     initialState: {
-      columnPinning: {
-        right: []
-      },
-      pagination: {
-        pageSize: 100
-      }
+      columnPinning: { right: [] },
+      pagination: { pageSize: 10000 }
     },
     defaultColumn: {
       minSize: 70,
@@ -91,15 +97,11 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setSearch,
     columnResizeMode: 'onChange',
-
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues()
+    getSortedRowModel: getSortedRowModel()
   });
 
   const tableContainerRef = React.useRef<HTMLTableElement>(null);
@@ -125,12 +127,17 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table.getState().columnSizingInfo.isResizingColumn]);
 
+  const bodyProps = React.useMemo(
+    () => ({ table, tableContainerRef, heightCell, lineClampClass }),
+    [table, heightCell, lineClampClass]
+  );
+
   return (
-    <div className="w-full h-full   flex flex-col gap-2 ">
+    <div className="w-full h-full flex flex-col gap-2">
       <div className="px-6">
         <TableToolbar data={data} table={table} search={search} setSearch={setSearch} />
       </div>
-      <div className="rounded-none overflow-hidden  border-y">
+      <div className="rounded-none overflow-hidden border-y">
         <WrapperVirtualizeTable ref={tableContainerRef} className="">
           <TableComp
             className="w-full relative"
@@ -140,19 +147,19 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
               ...columnSizeVars
             }}
           >
-            <thead className=" sticky top-0  z-50 ">
+            <thead className="sticky top-0 z-50 bg-secondary border-b">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} style={{ display: 'flex', width: '100%', height: heightHeader }}>
                   {headerGroup.headers.map((header) => {
-                    const isPined = header.column.getIsPinned();
+                    const isPinned = header.column.getIsPinned();
                     return (
                       <th
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
                         key={header.id}
                         className={cn(
-                          'grid place-items-center  not-first:border-l p-0 relative ',
-                          isPined ? ' bg-background backdrop-blur-md' : ''
+                          'grid place-items-center not-first:border-l p-0 relative',
+                          isPinned ? 'bg-background backdrop-blur-md' : ''
                         )}
                         style={{
                           ...getCommonPinningStyles(header.column),
@@ -163,13 +170,11 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
                         {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.id === 'actions' ? null : (
                           <div
-                            {...{
-                              onDoubleClick: () => header.column.resetSize(),
-                              className: cn(
-                                `bg-gray-300 opacity-0 hover:opacity-100  flex h-full resizer`,
-                                header.column.getIsResizing() ? 'isResizing' : ''
-                              )
-                            }}
+                            onDoubleClick={() => header.column.resetSize()}
+                            className={cn(
+                              'bg-gray-300 opacity-0 hover:opacity-100 flex h-full resizer',
+                              header.column.getIsResizing() ? 'isResizing' : ''
+                            )}
                           />
                         )}
                       </th>
@@ -178,62 +183,54 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
                 </tr>
               ))}
             </thead>
-            {isSizing ? (
-              <MemoizedTableBodyWrapper table={table} tableContainerRef={tableContainerRef} heightCell={heightCell} />
-            ) : (
-              <TableBodyWrapper table={table} tableContainerRef={tableContainerRef} heightCell={heightCell} />
-            )}
+            {isSizing ? <MemoizedTableBodyWrapper {...bodyProps} /> : <TableBodyWrapper {...bodyProps} />}
           </TableComp>
         </WrapperVirtualizeTable>
       </div>
-      <div className="px-6 pb-4 ">
-        {' '}
+      <div className="px-6 pb-4">
         <DataTablePagination table={table} />
       </div>
     </div>
   );
 }
 
-export const MemoizedTableBodyWrapper = React.memo(TableBodyWrapper) as React.FC<
-  TableBodyWrapperProps & { heightCell: number }
->;
+export const MemoizedTableBodyWrapper = React.memo(TableBodyWrapper) as React.FC<TableBodyWrapperProps>;
 
 interface TableBodyWrapperProps {
   table: Table<object>;
   tableContainerRef: React.RefObject<HTMLDivElement | null>;
   heightCell: number;
+  lineClampClass: string;
 }
 
-function TableBodyWrapper({ table, heightCell, tableContainerRef }: TableBodyWrapperProps) {
+function TableBodyWrapper({ table, heightCell, lineClampClass, tableContainerRef }: TableBodyWrapperProps) {
   const { rows } = table.getRowModel();
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
     estimateSize: () => heightCell,
     getScrollElement: () => tableContainerRef.current,
-    measureElement:
-      typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
-        ? (element) => element?.getBoundingClientRect().height
-        : undefined,
-    overscan: 3
+    overscan: 15
   });
 
   React.useLayoutEffect(() => {
     rowVirtualizer.measure();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows.length]);
+  }, [rows.length, heightCell]);
 
-  return <TableBody rowVirtualizer={rowVirtualizer} table={table} heightCell={heightCell} />;
+  return (
+    <TableBody rowVirtualizer={rowVirtualizer} rows={rows} heightCell={heightCell} lineClampClass={lineClampClass} />
+  );
 }
 
 interface TableBodyProps {
-  table: Table<object>;
+  rows: Row<object>[];
   rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>;
   heightCell: number;
+  lineClampClass: string;
 }
 
-function TableBody({ rowVirtualizer, table, heightCell }: TableBodyProps) {
-  const { rows } = table.getRowModel();
+function TableBody({ rowVirtualizer, rows, heightCell, lineClampClass }: TableBodyProps) {
   const virtualRows = rowVirtualizer.getVirtualItems();
 
   return (
@@ -250,9 +247,10 @@ function TableBody({ rowVirtualizer, table, heightCell }: TableBodyProps) {
           <TableBodyRowMemo
             key={row.id}
             row={row}
-            virtualRow={virtualRow}
-            rowVirtualizer={rowVirtualizer}
+            virtualStart={virtualRow.start}
+            virtualIndex={virtualRow.index}
             heightCell={heightCell}
+            lineClampClass={lineClampClass}
           />
         );
       })}
@@ -262,46 +260,38 @@ function TableBody({ rowVirtualizer, table, heightCell }: TableBodyProps) {
 
 interface TableBodyRowProps {
   row: Row<object>;
-  virtualRow: ReturnType<Virtualizer<HTMLDivElement, HTMLTableRowElement>['getVirtualItems']>[number];
-  rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>;
+  virtualStart: number;
+  virtualIndex: number;
   heightCell: number;
+  lineClampClass: string;
 }
 
-function TableBodyRow({ row, virtualRow, rowVirtualizer, heightCell }: TableBodyRowProps) {
-  const { rowHeight } = useRowHeightStore();
-  const lineCount = getLineCount(rowHeight);
+function TableBodyRow({ row, virtualStart, heightCell, virtualIndex, lineClampClass }: TableBodyRowProps) {
   return (
     <tr
-      data-index={virtualRow.index}
-      ref={(node) => rowVirtualizer.measureElement(node)}
-      key={row.id}
+      data-index={virtualIndex}
       style={{
         display: 'flex',
         position: 'absolute',
-        transform: `translateY(${virtualRow.start}px)`,
+        transform: `translateY(${virtualStart}px)`,
         width: '100%'
       }}
     >
       {row.getVisibleCells().map((cell) => {
+        const isPinned = cell.column.getIsPinned();
         return (
           <td
             key={cell.id}
             className={cn(
-              `flex justify-start  py-1.5 px-2  not-first:border-l border-t`,
-              cell.column.getIsPinned() ? ' bg-background' : '',
-              'size-full px-2 py-1.5 text-left text-xs outline-none has-data-[slot=checkbox]:pt-2.5  overflow-hidden',
-              match(lineCount)
-                .with(1, () => ' truncate line-clamp-1') // single line: still truncate
-                .with(2, () => ' line-clamp-2') // allow word breaks for multiline
-                .with(3, () => ' line-clamp-3')
-                .with(4, () => ' line-clamp-4')
-                .otherwise(() => ' truncate line-clamp-1')
+              'flex justify-start py-1.5 px-2 not-first:border-l border-t size-full text-left text-xs outline-none overflow-hidden',
+              isPinned ? 'bg-background' : '',
+              lineClampClass
             )}
             style={{
               ...getCommonPinningStyles(cell.column),
-              minWidth: `calc(var(--col-${cell.column.id}-size) * 1px) `,
+              minWidth: `calc(var(--col-${cell.column.id}-size) * 1px)`,
               flex: 1,
-              height: heightCell - 6
+              height: heightCell
             }}
           >
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -313,6 +303,10 @@ function TableBodyRow({ row, virtualRow, rowVirtualizer, heightCell }: TableBody
 }
 
 const TableBodyRowMemo = React.memo(TableBodyRow, (prev, next) => {
-  // Only skip re-render if scrolling and the row index hasn't changed
-  return next.rowVirtualizer.isScrolling && prev.virtualRow.index === next.virtualRow.index;
+  return (
+    prev.row === next.row &&
+    prev.virtualStart === next.virtualStart &&
+    prev.heightCell === next.heightCell &&
+    prev.lineClampClass === next.lineClampClass
+  );
 }) as typeof TableBodyRow;
