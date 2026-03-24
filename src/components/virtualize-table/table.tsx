@@ -142,7 +142,7 @@ export function VirtualizeTable({ columns, data, scrollRef }: VirtualizeTablePro
       </div>
       <div className="flex-1 min-h-0 overflow-auto  scrollbar-auto-hide" ref={scrollRef}>
         <TableComp
-          className="w-full relative"
+          className="w-full relative "
           style={{
             display: 'grid',
             minWidth: '100%',
@@ -160,7 +160,7 @@ export function VirtualizeTable({ columns, data, scrollRef }: VirtualizeTablePro
                       onTouchStart={header.getResizeHandler()}
                       key={header.id}
                       className={cn(
-                        'grid place-items-center not-first:border-l p-0 relative',
+                        'grid place-items-center not-first:border-l p-0 relative border-t',
                         isPinned ? 'bg-background backdrop-blur-md' : ''
                       )}
                       style={{
@@ -284,7 +284,7 @@ function TableBodyRow({ row, virtualStart, heightCell, virtualIndex, lineClampCl
           <td
             key={cell.id}
             className={cn(
-              'flex justify-start py-1.5 px-2 not-first:border-l border-t size-full text-left text-xs outline-none overflow-hidden',
+              'flex justify-start py-1.5 px-2 not-first:border-l border-b size-full text-left text-xs outline-none overflow-hidden',
               isPinned ? 'bg-background' : '',
               lineClampClass
             )}
