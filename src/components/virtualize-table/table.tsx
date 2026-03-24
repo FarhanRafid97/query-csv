@@ -22,7 +22,6 @@ import React, { type CSSProperties } from 'react';
 import { TableBody as TableBodyComp, Table as TableComp } from '../ui/table_v2';
 import { DataTablePagination } from './data-table-pagination';
 import TableToolbar from './table-toolbar';
-import WrapperVirtualizeTable from './wrapper-virtualize-table';
 import { useRowHeightStore } from '@/store/row-height';
 import { getLineCount, getRowHeightValue } from '@/lib/helper';
 
@@ -61,7 +60,13 @@ function getCommonPinningStyles<T>(column: Column<T>): CSSProperties {
   };
 }
 
-export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[]; data: object[] }) {
+interface VirtualizeTableProps {
+  columns: ColumnDef<object>[];
+  data: object[];
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+}
+
+export function VirtualizeTable({ columns, data, scrollRef }: VirtualizeTableProps) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -104,8 +109,6 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
     getSortedRowModel: getSortedRowModel()
   });
 
-  const tableContainerRef = React.useRef<HTMLTableElement>(null);
-
   const columnSizingInfo = table.getState().columnSizingInfo;
   const columnSizing = table.getState().columnSizing;
 
@@ -128,66 +131,64 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
   }, [table.getState().columnSizingInfo.isResizingColumn]);
 
   const bodyProps = React.useMemo(
-    () => ({ table, tableContainerRef, heightCell, lineClampClass }),
-    [table, heightCell, lineClampClass]
+    () => ({ table, scrollRef, heightCell, lineClampClass }),
+    [table, scrollRef, heightCell, lineClampClass]
   );
 
   return (
-    <div className="w-full h-full flex flex-col gap-2">
-      <div className="px-6">
+    <div className="w-full h-full flex flex-col">
+      <div className="px-6 py-2 shrink-0">
         <TableToolbar data={data} table={table} search={search} setSearch={setSearch} />
       </div>
-      <div className="rounded-none overflow-hidden border-y">
-        <WrapperVirtualizeTable ref={tableContainerRef} className="">
-          <TableComp
-            className="w-full relative"
-            style={{
-              display: 'grid',
-              minWidth: '100%',
-              ...columnSizeVars
-            }}
-          >
-            <thead className="sticky top-0 z-50 bg-secondary border-b">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} style={{ display: 'flex', width: '100%', height: heightHeader }}>
-                  {headerGroup.headers.map((header) => {
-                    const isPinned = header.column.getIsPinned();
-                    return (
-                      <th
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        key={header.id}
-                        className={cn(
-                          'grid place-items-center not-first:border-l p-0 relative',
-                          isPinned ? 'bg-background backdrop-blur-md' : ''
-                        )}
-                        style={{
-                          ...getCommonPinningStyles(header.column),
-                          minWidth: `calc(var(--header-${header?.id}-size) * 1px)`,
-                          flex: 1
-                        }}
-                      >
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.id === 'actions' ? null : (
-                          <div
-                            onDoubleClick={() => header.column.resetSize()}
-                            className={cn(
-                              'bg-gray-300 opacity-0 hover:opacity-100 flex h-full resizer',
-                              header.column.getIsResizing() ? 'isResizing' : ''
-                            )}
-                          />
-                        )}
-                      </th>
-                    );
-                  })}
-                </tr>
-              ))}
-            </thead>
-            {isSizing ? <MemoizedTableBodyWrapper {...bodyProps} /> : <TableBodyWrapper {...bodyProps} />}
-          </TableComp>
-        </WrapperVirtualizeTable>
+      <div className="flex-1 min-h-0 overflow-auto  scrollbar-auto-hide" ref={scrollRef}>
+        <TableComp
+          className="w-full relative"
+          style={{
+            display: 'grid',
+            minWidth: '100%',
+            ...columnSizeVars
+          }}
+        >
+          <thead className="sticky top-0 z-50 bg-secondary border-b">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id} style={{ display: 'flex', width: '100%', height: heightHeader }}>
+                {headerGroup.headers.map((header) => {
+                  const isPinned = header.column.getIsPinned();
+                  return (
+                    <th
+                      onMouseDown={header.getResizeHandler()}
+                      onTouchStart={header.getResizeHandler()}
+                      key={header.id}
+                      className={cn(
+                        'grid place-items-center not-first:border-l p-0 relative',
+                        isPinned ? 'bg-background backdrop-blur-md' : ''
+                      )}
+                      style={{
+                        ...getCommonPinningStyles(header.column),
+                        minWidth: `calc(var(--header-${header?.id}-size) * 1px)`,
+                        flex: 1
+                      }}
+                    >
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.id === 'actions' ? null : (
+                        <div
+                          onDoubleClick={() => header.column.resetSize()}
+                          className={cn(
+                            'bg-gray-300 opacity-0 hover:opacity-100 flex h-full resizer',
+                            header.column.getIsResizing() ? 'isResizing' : ''
+                          )}
+                        />
+                      )}
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
+          </thead>
+          {isSizing ? <MemoizedTableBodyWrapper {...bodyProps} /> : <TableBodyWrapper {...bodyProps} />}
+        </TableComp>
       </div>
-      <div className="px-6 pb-4">
+      <div className="px-6 py-2 shrink-0">
         <DataTablePagination table={table} />
       </div>
     </div>
@@ -198,19 +199,19 @@ export const MemoizedTableBodyWrapper = React.memo(TableBodyWrapper) as React.FC
 
 interface TableBodyWrapperProps {
   table: Table<object>;
-  tableContainerRef: React.RefObject<HTMLDivElement | null>;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
   heightCell: number;
   lineClampClass: string;
 }
 
-function TableBodyWrapper({ table, heightCell, lineClampClass, tableContainerRef }: TableBodyWrapperProps) {
+function TableBodyWrapper({ table, heightCell, lineClampClass, scrollRef }: TableBodyWrapperProps) {
   const { rows } = table.getRowModel();
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
     estimateSize: () => heightCell,
-    getScrollElement: () => tableContainerRef.current,
-    overscan: 15
+    getScrollElement: () => scrollRef.current,
+    overscan: 8
   });
 
   React.useLayoutEffect(() => {

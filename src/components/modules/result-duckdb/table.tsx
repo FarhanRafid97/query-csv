@@ -1,6 +1,6 @@
 import { VirtualizeTable } from '@/components/virtualize-table/table';
 import { type ColumnDef } from '@tanstack/react-table';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { generateColumns } from './column';
 
 export default function TableTanstack({
@@ -12,6 +12,7 @@ export default function TableTanstack({
   headers: string[];
 }) {
   const columns = useMemo(() => generateColumns(headers), [headers]);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const tableData = useMemo(() => {
     return data.map((row) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,9 +34,7 @@ export default function TableTanstack({
 
   return (
     <div className="w-full h-full flex flex-col min-h-0">
-      <div className="flex flex-col gap-2">
-        <VirtualizeTable data={tableData} columns={columns as ColumnDef<object>[]} />
-      </div>
+      <VirtualizeTable data={tableData} columns={columns as ColumnDef<object>[]} scrollRef={scrollRef} />
     </div>
   );
 }
