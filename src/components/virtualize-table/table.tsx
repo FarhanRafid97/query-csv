@@ -126,11 +126,11 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
   }, [table.getState().columnSizingInfo.isResizingColumn]);
 
   return (
-    <div className="w-full h-full   flex flex-col gap-2">
+    <div className="w-full h-full   flex flex-col gap-2 ">
       <div className="px-6">
         <TableToolbar data={data} table={table} search={search} setSearch={setSearch} />
       </div>
-      <div className="rounded-none overflow-hidden border-t border-b ">
+      <div className="rounded-none overflow-hidden  border-y">
         <WrapperVirtualizeTable ref={tableContainerRef} className="">
           <TableComp
             className="w-full relative"
@@ -140,7 +140,7 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
               ...columnSizeVars
             }}
           >
-            <thead className=" sticky top-0  z-50">
+            <thead className=" sticky top-0  z-50 ">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} style={{ display: 'flex', width: '100%', height: heightHeader }}>
                   {headerGroup.headers.map((header) => {
@@ -151,7 +151,7 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
                         onTouchStart={header.getResizeHandler()}
                         key={header.id}
                         className={cn(
-                          'grid place-items-center  border-[0.5px]  p-0 relative ',
+                          'grid place-items-center  not-first:border-l p-0 relative ',
                           isPined ? ' bg-background backdrop-blur-md' : ''
                         )}
                         style={{
@@ -287,7 +287,7 @@ function TableBodyRow({ row, virtualRow, rowVirtualizer, heightCell }: TableBody
           <td
             key={cell.id}
             className={cn(
-              `flex justify-start  py-1.5 px-2  border-[0.5px]`,
+              `flex justify-start  py-1.5 px-2  not-first:border-l border-t`,
               cell.column.getIsPinned() ? ' bg-background' : '',
               'size-full px-2 py-1.5 text-left text-xs outline-none has-data-[slot=checkbox]:pt-2.5  overflow-hidden',
               match(lineCount)
