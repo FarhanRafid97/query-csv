@@ -1,5 +1,5 @@
 import { type Table } from '@tanstack/react-table';
-
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
@@ -8,7 +8,9 @@ interface DataTablePaginationProps<TData> {
   table: Table<TData>;
 }
 
-export function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
+export const DataTablePagination = React.memo(function DataTablePagination<TData>({
+  table
+}: DataTablePaginationProps<TData>) {
   const totalRowCount = table.getRowCount();
   return (
     <div className="flex items-center justify-between px-1">
@@ -80,4 +82,4 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
       </div>
     </div>
   );
-}
+}) as <TData>(props: DataTablePaginationProps<TData>) => React.ReactElement;

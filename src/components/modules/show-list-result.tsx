@@ -12,7 +12,6 @@ const ShowListResult: React.FC<ShowListResultProps> = ({
   currentShowingHeadersMultiple,
   currentShowingDataMultiple
 }) => {
-  console.log('ini currentShowingDataMultiple', currentShowingDataMultiple);
   return (
     <div className="w-full h-full flex flex-col">
       <Tabs defaultValue="data-0" className="w-full h-full flex flex-col">

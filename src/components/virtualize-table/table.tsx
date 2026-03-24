@@ -130,15 +130,26 @@ export function VirtualizeTable({ columns, data, scrollRef }: VirtualizeTablePro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table.getState().columnSizingInfo.isResizingColumn]);
 
-  const bodyProps = React.useMemo(
-    () => ({ table, scrollRef, heightCell, lineClampClass }),
-    [table, scrollRef, heightCell, lineClampClass]
+  const visibleColumnsKey = React.useMemo(
+    () =>
+      table
+        .getVisibleFlatColumns()
+        .map((c) => c.id)
+        .join(','),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columnVisibility, table]
   );
 
+  const bodyProps = React.useMemo(
+    () => ({ table, scrollRef, heightCell, lineClampClass, visibleColumnsKey }),
+    [table, scrollRef, heightCell, lineClampClass, visibleColumnsKey]
+  );
+
+  const exportHeaders = Object.keys(data[0]).map((key) => ({ label: key, key }));
   return (
     <div className="w-full h-full flex flex-col">
       <div className="px-6 py-2 shrink-0">
-        <TableToolbar data={data} table={table} search={search} setSearch={setSearch} />
+        <TableToolbar data={data} table={table} search={search} setSearch={setSearch} exportHeaders={exportHeaders} />
       </div>
       <div className="flex-1 min-h-0 overflow-auto  scrollbar-auto-hide" ref={scrollRef}>
         <TableComp
@@ -202,9 +213,10 @@ interface TableBodyWrapperProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   heightCell: number;
   lineClampClass: string;
+  visibleColumnsKey: string;
 }
 
-function TableBodyWrapper({ table, heightCell, lineClampClass, scrollRef }: TableBodyWrapperProps) {
+function TableBodyWrapper({ table, heightCell, lineClampClass, scrollRef, visibleColumnsKey }: TableBodyWrapperProps) {
   const { rows } = table.getRowModel();
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
@@ -220,7 +232,13 @@ function TableBodyWrapper({ table, heightCell, lineClampClass, scrollRef }: Tabl
   }, [rows.length, heightCell]);
 
   return (
-    <TableBody rowVirtualizer={rowVirtualizer} rows={rows} heightCell={heightCell} lineClampClass={lineClampClass} />
+    <TableBody
+      rowVirtualizer={rowVirtualizer}
+      rows={rows}
+      heightCell={heightCell}
+      lineClampClass={lineClampClass}
+      visibleColumnsKey={visibleColumnsKey}
+    />
   );
 }
 
@@ -229,9 +247,10 @@ interface TableBodyProps {
   rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>;
   heightCell: number;
   lineClampClass: string;
+  visibleColumnsKey: string;
 }
 
-function TableBody({ rowVirtualizer, rows, heightCell, lineClampClass }: TableBodyProps) {
+function TableBody({ rowVirtualizer, rows, heightCell, lineClampClass, visibleColumnsKey }: TableBodyProps) {
   const virtualRows = rowVirtualizer.getVirtualItems();
 
   return (
@@ -252,6 +271,7 @@ function TableBody({ rowVirtualizer, rows, heightCell, lineClampClass }: TableBo
             virtualIndex={virtualRow.index}
             heightCell={heightCell}
             lineClampClass={lineClampClass}
+            visibleColumnsKey={visibleColumnsKey}
           />
         );
       })}
@@ -265,6 +285,7 @@ interface TableBodyRowProps {
   virtualIndex: number;
   heightCell: number;
   lineClampClass: string;
+  visibleColumnsKey: string;
 }
 
 function TableBodyRow({ row, virtualStart, heightCell, virtualIndex, lineClampClass }: TableBodyRowProps) {
@@ -308,6 +329,7 @@ const TableBodyRowMemo = React.memo(TableBodyRow, (prev, next) => {
     prev.row === next.row &&
     prev.virtualStart === next.virtualStart &&
     prev.heightCell === next.heightCell &&
-    prev.lineClampClass === next.lineClampClass
+    prev.lineClampClass === next.lineClampClass &&
+    prev.visibleColumnsKey === next.visibleColumnsKey
   );
 }) as typeof TableBodyRow;

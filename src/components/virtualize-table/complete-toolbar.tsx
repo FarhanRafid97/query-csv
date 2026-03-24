@@ -6,8 +6,15 @@ import { DataTableViewOptions } from './data-table-view-options';
 import { DataGridRowHeightMenu } from './select-column-height';
 import ExportCsv from '../modules/export-csv';
 
-const CompleteToolbar = ({ table, data }: { table: Table<object>; data: object[] }) => {
-  const headers = data.length > 0 ? Object.keys(data[0]) : [];
+const CompleteToolbar = ({
+  table,
+  data,
+  exportHeaders
+}: {
+  table: Table<object>;
+  data: object[];
+  exportHeaders: { label: string; key: string }[];
+}) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -24,7 +31,7 @@ const CompleteToolbar = ({ table, data }: { table: Table<object>; data: object[]
         </PopoverHeader>
         <div className="p-4">
           <div className="">
-            <ExportCsv data={data} headers={headers.map((header: string) => ({ label: header, key: header }))} />
+            <ExportCsv getData={() => data} headers={exportHeaders} />
           </div>
         </div>
         <Separator />
