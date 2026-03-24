@@ -62,8 +62,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuItem key={table.label}>
                       <SidebarMenuButton className="h-8 px-2 py-1.5 text-sm font-normal select-none">
                         <div className="flex items-center gap-2 w-full min-w-0 select-text">
-                          <TableIcon className="size-3.5 text-muted-foreground flex-shrink-0" />
-                          <span className="truncate text-foreground/90 select-text">{table.label}</span>
+                          <TableIcon className="size-3 text-muted-foreground " />
+                          <span className="truncate text-foreground/90 select-text text-[11px]">{table.label}</span>
                         </div>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

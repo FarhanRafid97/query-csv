@@ -125,11 +125,10 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [table.getState().columnSizingInfo.isResizingColumn]);
 
-  console.log('rerender');
   return (
     <div className="w-full h-full   flex flex-col gap-2">
       <div className="px-6">
-        <TableToolbar table={table} search={search} setSearch={setSearch} />
+        <TableToolbar data={data} table={table} search={search} setSearch={setSearch} />
       </div>
       <div className="rounded-none overflow-hidden border-t border-b ">
         <WrapperVirtualizeTable ref={tableContainerRef} className="">
@@ -141,7 +140,7 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
               ...columnSizeVars
             }}
           >
-            <th className=" sticky top-0  z-50">
+            <thead className=" sticky top-0  z-50">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} style={{ display: 'flex', width: '100%', height: heightHeader }}>
                   {headerGroup.headers.map((header) => {
@@ -178,7 +177,7 @@ export function VirtualizeTable({ columns, data }: { columns: ColumnDef<object>[
                   })}
                 </tr>
               ))}
-            </th>
+            </thead>
             {isSizing ? (
               <MemoizedTableBodyWrapper table={table} tableContainerRef={tableContainerRef} heightCell={heightCell} />
             ) : (
@@ -236,7 +235,7 @@ interface TableBodyProps {
 function TableBody({ rowVirtualizer, table, heightCell }: TableBodyProps) {
   const { rows } = table.getRowModel();
   const virtualRows = rowVirtualizer.getVirtualItems();
-  console.log(virtualRows);
+
   return (
     <TableBodyComp
       style={{
@@ -290,7 +289,7 @@ function TableBodyRow({ row, virtualRow, rowVirtualizer, heightCell }: TableBody
             className={cn(
               `flex justify-start  py-1.5 px-2  border-[0.5px]`,
               cell.column.getIsPinned() ? ' bg-background' : '',
-              'size-full px-2 py-1.5 text-left text-sm outline-none has-data-[slot=checkbox]:pt-2.5  overflow-hidden',
+              'size-full px-2 py-1.5 text-left text-xs outline-none has-data-[slot=checkbox]:pt-2.5  overflow-hidden',
               match(lineCount)
                 .with(1, () => ' truncate line-clamp-1') // single line: still truncate
                 .with(2, () => ' line-clamp-2') // allow word breaks for multiline

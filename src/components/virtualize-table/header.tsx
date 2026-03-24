@@ -43,7 +43,7 @@ export function DataTableColumnHeaderComplete<TData, TValue>({
         }}
       >
         <div className="truncate overflow-hidden text-start">
-          <span className="text-[12px]  font-normal text-start text-black-shadow ">{title}</span>
+          <span className="text-[12px]  font-normal text-start text-black-shadow font-source-code-pro">{title}</span>
         </div>
       </div>
     );
@@ -59,21 +59,21 @@ export function DataTableColumnHeaderComplete<TData, TValue>({
           }}
         >
           <div className="truncate overflow-hidden text-start">
-            <span className="text-[12px] font-normal  text-start text-black-shadow ">{title}</span>
+            <span className="text-[12px] font-normal  text-start text-black-shadow font-source-code-pro">{title}</span>
           </div>
           <div className="min-w-[14px]">
             {match(column.getIsSorted())
-              .with('desc', () => <ArrowDownIcon width={14} height={14} className=" text-gray-700" />)
-              .with('asc', () => <ArrowUpIcon width={14} height={14} className=" text-gray-700" />)
+              .with('desc', () => <ArrowDownIcon className=" text-gray-700 size-4" />)
+              .with('asc', () => <ArrowUpIcon className=" text-gray-700 size-4" />)
               .otherwise(() => (
-                <CaretSortIcon width={14} height={14} className=" text-gray-400" />
+                <CaretSortIcon className=" text-gray-400 size-4" />
               ))}
           </div>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className=" border-gray-200 min-w-60">
         <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
-          <ArrowUpIcon />
+          <ArrowUpIcon className=" size-3" />
           Sort asc
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => column.toggleSorting(true)}>

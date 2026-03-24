@@ -1,13 +1,12 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import './styles/font-geist.css';
-@import './styles/font-geist-mono.css';
-
+@import './styles/font-source-code.css';
+@import './styles/font-inter.css';
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-geist: 'Geist', sans-serif;
-  --font-geist-mono: 'Geist Mono', monospace;
+  --font-inter: 'Inter', sans-serif;
+  --font-source-code-pro: 'Source Code Pro', monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -132,7 +131,10 @@
 @layer base {
   * {
     @apply border-border;
-    font-family: var(--font-geist-mono);
+    font-family: var(--font-inter);
+  }
+  table {
+    font-family: var(--font-source-code-pro) !important;
   }
   body {
     @apply bg-muted/40  text-foreground;

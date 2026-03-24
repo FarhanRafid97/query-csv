@@ -56,14 +56,25 @@ const loadCSV = async (
 
   await connection.query(`DROP TABLE IF EXISTS "${tableName}"`);
   await db.registerFileBuffer(file.name, uint8Array);
+  const schemaResult = await connection.query(`
+    DESCRIBE SELECT * FROM read_csv_auto('${file.name}', header=true) LIMIT 0
+  `);
+
+  const columns = schemaResult.toArray(); // [{ column_name, column_type, ... }]
+  console.log('ini schemaResult', columns);
+
+  // Build REPLACE expressions only for date/time columns
+  const dateColumns = columns
+    .filter((col) => ['DATE', 'TIMESTAMP', 'TIMESTAMPTZ', 'TIME'].includes(col.column_type))
+    .map((col) => `CAST("${col.column_name}" AS VARCHAR) AS "${col.column_name}"`);
+
+  const selectExpr = dateColumns.length > 0 ? `* REPLACE (${dateColumns.join(', ')})` : `*`;
 
   await connection.query(
-    `CREATE TABLE "${tableName}" AS SELECT * FROM read_csv_auto('${file.name}', header=true, delim='${delim}')`
+    `CREATE TABLE "${tableName}" AS SELECT ${selectExpr} FROM read_csv_auto('${file.name}', header=true, delim='${delim}')`
   );
 
-  const schemaQuery = await connection.query(`DESCRIBE "${tableName}"`);
-  const schemaResult = schemaQuery.toArray();
-  const columnNames = schemaResult.map((row: { column_name: string }) => row.column_name);
+  const columnNames = schemaResult.toArray().map((row: { column_name: string }) => row.column_name);
 
   const metadataTable: TableMetaData = {
     label: tableName,

@@ -11,7 +11,7 @@ export const TableCellCostume = ({
   className?: string;
 }) => {
   return (
-    <span data-slot="grid-cell-content" className={cn('', c)}>
+    <span data-slot="grid-cell-content" className={cn(' font-source-code-pro', c)}>
       {match(children)
         .with(null, () => <span className="text-muted-foreground">{`[NULL]`}</span>)
         .with(undefined, () => 'UNDEFINED')

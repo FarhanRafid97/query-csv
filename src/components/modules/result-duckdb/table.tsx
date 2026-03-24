@@ -24,7 +24,7 @@ export default function TableTanstack({
       return obj;
     });
   }, [data, headers]);
-  console.log(tableData);
+  console.log('tableData', tableData);
 
   return (
     <div className="w-full h-full flex flex-col min-h-0">
