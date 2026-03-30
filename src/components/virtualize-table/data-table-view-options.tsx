@@ -7,7 +7,7 @@ interface DataTableViewOptionsProps<TData> {
 
 export function DataTableViewOptions<TData>({ table }: Readonly<DataTableViewOptionsProps<TData>>) {
   return (
-    <div className="flex flex-wrap gap-1.5 space-y-0.5 overflow-y-auto ">
+    <div className="flex flex-wrap gap-1.5 space-y-0.5 overflow-y-auto max-h-48 scrollbar-auto-hide">
       {table.getAllColumns().map((column) => {
         return (
           <button

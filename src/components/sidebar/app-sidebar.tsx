@@ -17,11 +17,13 @@ import { TableIcon } from '@radix-ui/react-icons';
 import { Database } from 'lucide-react';
 import * as React from 'react';
 import AddNewTable from '../modules/add-new-table';
+import useQuerryStore from '@/store/querry';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Note: I'm using state to show active item.
   // IRL you should use the url/router.
 
+  const { currentQuerry, setCurrentQuerry } = useQuerryStore();
   const { listTable } = useTableStore();
 
   return (
@@ -60,7 +62,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenu className="space-y-0.5">
                   {Array.from(listTable.values()).map((table) => (
                     <SidebarMenuItem key={table.label}>
-                      <SidebarMenuButton className="h-8 px-2 py-1.5 text-sm font-normal select-none">
+                      <SidebarMenuButton
+                        className="h-8 px-2 py-1.5 text-sm font-normal select-none"
+                        onDoubleClick={() => {
+                          setCurrentQuerry(currentQuerry + `\nSELECT * FROM ${table.label};`);
+                        }}
+                      >
                         <div className="flex items-center gap-2 w-full min-w-0 select-text">
                           <TableIcon className="size-3 text-muted-foreground " />
                           <span className="truncate text-foreground/90 select-text text-[11px]">{table.label}</span>
